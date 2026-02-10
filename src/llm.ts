@@ -607,6 +607,13 @@ export class LlamaCpp implements LLM {
     }
 
     this.rerankModelLoadPromise = (async () => {
+      // Dispose generate model to free VRAM before loading reranker.
+      if (this.generateModel) {
+        await this.generateModel.dispose();
+        this.generateModel = null;
+        this.generateModelLoadPromise = null;
+      }
+
       const llama = await this.ensureLlama();
       const modelPath = await this.resolveModel(this.rerankModelUri);
       const model = await llama.loadModel({ modelPath });
