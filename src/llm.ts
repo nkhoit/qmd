@@ -736,8 +736,10 @@ export class LlamaCpp implements LLM {
     // Ensure model is loaded
     await this.ensureGenerateModel();
 
-    // Create fresh context -> sequence -> session for each call
-    const context = await this.generateModel!.createContext();
+    // Create fresh context -> sequence -> session for each call.
+    // Limit context size to 2048 tokens - query expansion only needs ~200 tokens,
+    // but the model metadata declares 40K context which wastes ~5GB on KV cache.
+    const context = await this.generateModel!.createContext({ contextSize: 2048 });
     const sequence = context.getSequence();
     const session = new LlamaChatSession({ contextSequence: sequence });
 
@@ -809,8 +811,10 @@ export class LlamaCpp implements LLM {
 
     const prompt = `/no_think Expand this search query: ${query}`;
 
-    // Create fresh context for each call
-    const genContext = await this.generateModel!.createContext();
+    // Create fresh context for each call.
+    // Limit context size to 2048 tokens - query expansion only needs ~200 tokens,
+    // but the model metadata declares 40K context which wastes ~5GB on KV cache.
+    const genContext = await this.generateModel!.createContext({ contextSize: 2048 });
     const sequence = genContext.getSequence();
     const session = new LlamaChatSession({ contextSequence: sequence });
 
